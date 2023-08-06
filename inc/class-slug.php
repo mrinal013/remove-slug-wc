@@ -12,6 +12,7 @@ class Slug {
     public function __construct() {
         add_action( 'pre_get_posts', [ $this, 'rsw_change_slug_structure' ], 99 );
         add_action( 'admin_init', [ $this, 'rsw_change_pretty_permalink' ] );
+        add_action( 'template_redirect', [ $this, 'handle_product_base' ] );
 
         add_filter( 'post_type_link', [ $this, 'rsw_remove_slug' ], 10, 3 );
         
@@ -51,6 +52,19 @@ class Slug {
         update_option( "rewrite_rules", FALSE ); 
     
         $wp_rewrite->flush_rules( true );
+    }
+
+    public function handle_product_base() {
+        global $wp_query, $wp;
+
+        $current_url = home_url( add_query_arg( array( $_GET ), $wp->request ) );
+        $woocommerce_base_slug = get_option( 'woocommerce_permalinks' )['product_base'] . '/';
+
+        if ( false !== strpos( $current_url, $woocommerce_base_slug ) ) {
+            $wp_query->set_404();
+            status_header( 404 );
+            get_template_part( 404 );
+        }
     }
 }
 
